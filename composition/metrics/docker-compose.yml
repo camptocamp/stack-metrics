@@ -1,0 +1,103 @@
+containers:
+  labels:
+    io.rancher.scheduler.global: 'true'
+    io.rancher.container.pull_image: always
+    io.rancher.container.hostname_override: container_name
+    prometheus_port: '9104'
+  tty: true
+  image: usman/container-exporter
+  volumes:
+  - /var/run/docker.sock:/var/run/docker.sock
+  - /sys/fs/cgroup:/cgroup
+  stdin_open: true
+
+node:
+  labels:
+    io.rancher.scheduler.global: 'true'
+    io.rancher.container.pull_image: always
+    io.rancher.container.hostname_override: container_name
+    prometheus_port: '9100'
+  tty: true
+  image: prom/node-exporter
+  volumes:
+  - /proc:/host_proc
+  - /sys:/host_sys
+  command:
+  - -collector.sysfs=/host_sys -collector.procfs=/host_proc
+  stdin_open: true
+
+statsd:
+  ports:
+  - 8125:8125/udp
+  labels:
+    io.rancher.container.pull_image: always
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    io.rancher.container.hostname_override: container_name
+  tty: true
+  image: camptocamp/statsd-collectd
+  stdin_open: true
+
+collectd:
+  labels:
+    io.rancher.container.pull_image: always
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    prometheus_port: '9103'
+    io.rancher.container.hostname_override: container_name
+  tty: true
+  command:
+  - -collectd.listen-address=:25826
+  image: prom/collectd-exporter
+  stdin_open: true
+
+grafana:
+  ports:
+  - 3000:3000/tcp
+  labels:
+    io.rancher.container.pull_image: always
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    io.rancher.container.hostname_override: container_name
+    io.rancher.sidekicks: grafana-data
+  tty: true
+  image: grafana/grafana:2.6.0
+  stdin_open: true
+  volumes_from:
+    - 'grafana-data'
+
+grafana-data:
+  labels:
+    io.rancher.container.start_once: 'true'
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    io.rancher.container.hostname_override: container_name
+  entrypoint:
+    - '/bin/true'
+  image: grafana/grafana:2.6.0
+  volumes:
+    - '/var/lib/grafana'
+    - '/var/log/grafana'
+    - '/etc/grafana'
+
+prometheus:
+  ports:
+  - 9090:9090/tcp
+  labels:
+    io.rancher.container.pull_image: always
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    io.rancher.container.hostname_override: container_name
+    io.rancher.sidekicks: prometheus-data
+  tty: true
+  image: camptocamp/prometheus-docker-rancher
+  stdin_open: true
+  volumes_from:
+    - 'prometheus-data'
+
+prometheus-data:
+  labels:
+    io.rancher.container.start_once: 'true'
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    io.rancher.container.hostname_override: container_name
+  entrypoint:
+    - '/bin/true'
+  image: camptocamp/prometheus-docker-rancher
+  volumes:
+    - '/prometheus'
+    - '/etc/prometheus'

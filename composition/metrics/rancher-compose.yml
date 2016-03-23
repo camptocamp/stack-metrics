@@ -1,0 +1,8 @@
+collectd:
+  scale: 1
+statsd:
+  scale: 1
+grafana:
+  scale: 1
+prometheus:
+  scale: 1
