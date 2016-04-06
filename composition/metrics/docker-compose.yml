@@ -27,12 +27,11 @@ node:
   stdin_open: true
 
 statsd:
-  ports:
-  - 8125:8125/udp
   labels:
     io.rancher.container.pull_image: always
     io.rancher.scheduler.affinity:host_label: node_role=monitoring
     io.rancher.container.hostname_override: container_name
+    io.rancher.container.requested_ip: 10.42.24.101
   tty: true
   image: camptocamp/statsd-collectd
   stdin_open: true
