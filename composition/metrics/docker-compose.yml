@@ -37,6 +37,15 @@ statsd:
   image: camptocamp/statsd-collectd
   stdin_open: true
 
+rancher:
+  tty: true
+  labels:
+    io.rancher.container.create_agent: true
+    io.rancher.container.agent.role: environment
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    prometheus_port: '9010'
+  image: jolyonbrown/prometheus-rancher-exporter
+
 collectd:
   labels:
     io.rancher.scheduler.affinity:host_label: node_role=monitoring
