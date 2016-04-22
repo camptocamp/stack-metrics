@@ -83,28 +83,25 @@ grafana-data:
     - '/var/log/grafana'
     - '/etc/grafana'
 
-prometheus:
-  ports:
-  - 9090:9090/tcp
+prometheus-server-conf:
+  image: 'camptocamp/prometheus-conf'
   labels:
     io.rancher.container.pull_image: always
     io.rancher.scheduler.affinity:host_label: node_role=monitoring
     io.rancher.container.hostname_override: container_name
-    io.rancher.sidekicks: prometheus-data
-  tty: true
-  image: camptocamp/prometheus-docker-rancher
-  stdin_open: true
-  volumes_from:
-    - 'prometheus-data'
-
-prometheus-data:
-  labels:
-    io.rancher.container.start_once: 'true'
-    io.rancher.scheduler.affinity:host_label: node_role=monitoring
-    io.rancher.container.hostname_override: container_name
-  entrypoint:
-    - '/bin/true'
-  image: camptocamp/prometheus-docker-rancher
   volumes:
-    - '/prometheus'
-    - '/etc/prometheus'
+    - '/etc/prometheus-confd/'
+
+prometheus-server:
+  labels:
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    #io.rancher.container.hostname_override: container_name
+    io.rancher.sidekicks: prometheus-server-conf
+    prometheus_port: '9090'
+  image: 'prom/prometheus:0.18.0'
+  entrypoint: 'prometheus -log.level=debug -config.file=/etc/prometheus-confd/prometheus.yml -storage.local.path=/prometheus -web.console.libraries=/etc/prometheus/console_libraries -web.console.templates=/etc/prometheus/consoles -storage.local.max-chunks-to-persist=131072 -storage.local.memory-chunks=262144'
+  volumes_from:
+    - 'prometheus-server-conf'
+  volumes:
+    - 'metrics_tsdb:/prometheus'
+

@@ -1,0 +1,25 @@
+{{- define "nodeinfo" -}}
+  {{ $host_uuid := . -}}
+  {{ range $name := ls "/hosts/" -}}
+    {{- if eq $host_uuid (getv ( printf "/hosts/%s/uuid" . )) }}
+    rancher_host: '{{ $name }}'
+      {{- range gets (printf "/hosts/%s/labels/*" $name) }}
+    {{ replace (index (split .Key "/") 4) "io.rancher.host." "" -1 }}: '{{ .Value }}'
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{ end }}
+{{- range $service := ls "/services/" -}}
+  {{ if exists (printf "/services/%s/labels/prometheus_port" .) -}}
+    {{- $port := getv (printf "/services/%s/labels/prometheus_port" .) }}
+    {{- range $container := lsdir (printf "/services/%s/containers/" $service) -}}
+      {{- $host_uuid := getv (printf "/containers/%s/host_uuid" $container) }}
+- targets:
+  - '{{ getv ( printf "/services/%s/containers/%s/primary_ip" $service $container ) }}:{{ $port }}'
+  labels:
+    job: '{{ $service }}'
+    rancher_environment: '{{ getv "/self/stack/environment_name" }}'
+      {{- template "nodeinfo" $host_uuid }}
+    {{- end }}
+  {{- end }}
+{{- end }}

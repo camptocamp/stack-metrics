@@ -1,0 +1,9 @@
+[template]
+src = "prometheus-targets.yml.tmpl"
+dest = "/etc/prometheus-confd/prometheus-targets.yml"
+keys = [
+  "/services",
+  "/self",
+  "/containers",
+  "/hosts",
+]
