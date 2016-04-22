@@ -1,14 +1,17 @@
 containers:
   labels:
     io.rancher.scheduler.global: 'true'
-    io.rancher.container.pull_image: always
     io.rancher.container.hostname_override: container_name
     prometheus_port: '9104'
   tty: true
-  image: usman/container-exporter
+  image: google/cadvisor:latest
   volumes:
-  - /var/run/docker.sock:/var/run/docker.sock
-  - /sys/fs/cgroup:/cgroup
+  - /:/rootfs:ro
+  - /var/run:/var/run:rw
+  - /sys:/sys:ro
+  - /var/lib/docker/:/var/lib/docker:ro
+  command:
+  - --port=9104
   stdin_open: true
 
 node:
