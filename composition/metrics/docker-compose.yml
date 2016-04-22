@@ -17,7 +17,6 @@ containers:
 node:
   labels:
     io.rancher.scheduler.global: 'true'
-    io.rancher.container.pull_image: always
     io.rancher.container.hostname_override: container_name
     prometheus_port: '9100'
   tty: true
@@ -31,7 +30,6 @@ node:
 
 statsd:
   labels:
-    io.rancher.container.pull_image: always
     io.rancher.scheduler.affinity:host_label: node_role=monitoring
     io.rancher.container.hostname_override: container_name
     io.rancher.container.requested_ip: 10.42.24.101
@@ -41,7 +39,6 @@ statsd:
 
 collectd:
   labels:
-    io.rancher.container.pull_image: always
     io.rancher.scheduler.affinity:host_label: node_role=monitoring
     prometheus_port: '9103'
     io.rancher.container.hostname_override: container_name
@@ -55,7 +52,6 @@ grafana:
   ports:
   - 3000:3000/tcp
   labels:
-    io.rancher.container.pull_image: always
     io.rancher.scheduler.affinity:host_label: node_role=monitoring
     io.rancher.container.hostname_override: container_name
     io.rancher.sidekicks: grafana-data
