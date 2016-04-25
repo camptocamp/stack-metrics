@@ -105,3 +105,25 @@ prometheus-server:
   volumes:
     - 'metrics_tsdb:/prometheus'
 
+prometheus-auth-conf:
+  image: 'camptocamp/prometheus-auth-conf'
+  labels:
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    io.rancher.container.start_once: 'true'
+  environment:
+    USERNAME: '#change me please'
+    PASSWORD: '#change me please'
+    GRAFANA_URL: 'https://grafana.url.example.com'
+  volumes:
+    - '/etc/haproxy'
+    - '/entrypoint'
+
+prometheus-auth:
+  labels:
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+    io.rancher.sidekicks: prometheus-auth-conf
+  image: haproxy:1.6-alpine
+  entrypoint: /entrypoint/run.sh
+  volumes_from:
+    - 'prometheus-auth-conf'
+

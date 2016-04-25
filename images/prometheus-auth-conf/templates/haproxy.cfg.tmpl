@@ -1,0 +1,47 @@
+global
+	log rsyslog.logging.rancher.internal:1514 local1 notice
+	chroot /var/lib/haproxy
+	user nobody
+	group nobody
+	daemon
+
+defaults
+	log global
+	mode http
+	option dontlog-normal
+	option httpchk
+	timeout connect 5000
+	timeout client 50000
+	timeout server 50000
+	errorfile 400 /usr/local/etc/haproxy/errors/400.http
+	errorfile 403 /usr/local/etc/haproxy/errors/403.http
+	errorfile 408 /usr/local/etc/haproxy/errors/408.http
+	errorfile 500 /usr/local/etc/haproxy/errors/500.http
+	errorfile 502 /usr/local/etc/haproxy/errors/502.http
+	errorfile 503 /usr/local/etc/haproxy/errors/503.http
+	errorfile 504 /usr/local/etc/haproxy/errors/504.http
+
+userlist prometheus
+	group prometheus
+	user {{getenv "USERNAME"}} insecure-password {{getenv "PASSWORD"}} groups prometheus
+
+resolvers rancherdns
+	nameserver dns1 169.254.169.250:53
+
+frontend http-in
+	bind *:8080
+	default_backend prometheus
+	use_backend cors_headers if METH_OPTIONS
+
+backend prometheus
+	acl valid_user http_auth(prometheus)
+	http-request auth realm Prometheus if !valid_user
+	rspidel ^Access-Control-Allow-Origin:.*
+	rspadd Access-Control-Allow-Origin:\ {{getenv "GRAFANA_URL"}}
+	rspadd Access-Control-Allow-Credentials:\ true
+	option httpchk GET /
+	server prometheus prometheus-server.metrics.rancher.internal:9090 maxconn 32 check resolvers rancherdns inter 5000
+
+backend cors_headers
+	errorfile 503 /etc/haproxy/cors.http
+
