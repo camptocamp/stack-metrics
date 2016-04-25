@@ -127,3 +127,35 @@ prometheus-auth:
   volumes_from:
     - 'prometheus-auth-conf'
 
+
+letsencrypt:
+  environment:
+    API_VERSION: Production
+    DEBUG: 'false'
+    EULA: 'Yes'
+    PUBLIC_KEY_TYPE: RSA-4096
+    RENEWAL_TIME: '12'
+    AWS_ACCESS_KEY: TODO
+    AWS_SECRET_KEY: TODO
+    PROVIDER: Route53
+    DOMAINS: prometheus.metrics.example.com
+    EMAIL: letsencrypt@example.com
+  labels:
+    io.rancher.container.create_agent: 'true'
+    io.rancher.container.agent.role: environment
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+  image: janeczku/rancher-letsencrypt:v0.2.5
+
+
+prometheus:
+  ports:
+  - 9443:8080
+  links:
+  - prometheus-auth:prometheus-auth
+  labels:
+    io.rancher.loadbalancer.ssl.ports: '9443'
+    io.rancher.scheduler.affinity:host_label: node_role=monitoring
+  tty: true
+  image: rancher/load-balancer-service
+  stdin_open: true
+
